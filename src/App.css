@@ -117,6 +117,8 @@ body {
 }
 
 .message {
+  margin-left: 3rem;
+  margin-right: 3rem;
   color: #aaaaaa;
 }
 
@@ -126,6 +128,12 @@ body {
 
 .link {
   color: #00abf0;
+}
+
+.link:hover {
+  cursor: pointer;
+  color: #00abf0;
+  text-decoration: underline;
 }
 
 .upload-button {

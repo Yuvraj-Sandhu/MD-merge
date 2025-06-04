@@ -5,6 +5,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
   const [downloadUrl, setDownloadUrl] = useState('');
   const [message, setMessage] = useState('');
 
@@ -13,6 +14,7 @@ function App() {
     setDownloadUrl('');
     setMessage('');
     setProgress(0);
+    setProgressMessage('');
   };
 
   const handleUpload = async () => {
@@ -20,16 +22,40 @@ function App() {
       setMessage('Please select a ZIP file first.');
       return;
     }
+
+    const sessionId = crypto.randomUUID();
     setUploading(true);
-    setMessage('');
+    setMessage('Starting upload...');
     setProgress(0);
+    setProgressMessage('');
     setDownloadUrl('');
 
     const formData = new FormData();
     formData.append('file', selectedFile);
 
+    // Listen for real-time updates
+    const eventSource = new EventSource(`http://localhost:5000/progress/${sessionId}`);
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const { total_files, current_index, done } = data;
+
+        if (total_files > 0) {
+          const percent = Math.floor((current_index / total_files) * 100);
+          setProgress(percent);
+          setProgressMessage(`Merging file ${current_index} of ${total_files}...`);
+        }
+
+        if (done) {
+          eventSource.close();
+        }
+      } catch (err) {
+        console.error('Error parsing SSE data:', err);
+      }
+    };
+
     try {
-      const response = await fetch('http://localhost:5000/upload', {
+      const response = await fetch(`http://localhost:5000/upload/${sessionId}`, {
         method: 'POST',
         body: formData,
       });
@@ -56,7 +82,6 @@ function App() {
       setMessage('Error processing file: ' + err.message);
     } finally {
       setUploading(false);
-      setProgress(0);
     }
   };
 
@@ -65,10 +90,10 @@ function App() {
       <h1 className='app-title'>Markdown ZIP Merge</h1>
 
       <div className='upload-form'>
-        <span class="form-title">Upload your file</span>
-        <p class="form-paragraph">Should be a zip file</p>
+        <span className="form-title">Upload your file</span>
+        <p className="form-paragraph">Should be a zip file</p>
         <div className='file-input-container'>
-          <span class="drop-title">Drop file here</span>
+          <span className="drop-title">Drop file here</span>
           or
           <input
             type="file"
@@ -83,6 +108,7 @@ function App() {
           <div className='progress-container'>
             <progress value={progress} max="100" />
             <div>{progress}%</div>
+            <p>{progressMessage}</p>
           </div>
         )}
 
