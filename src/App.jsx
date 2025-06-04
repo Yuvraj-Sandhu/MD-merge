@@ -47,7 +47,7 @@ function App() {
       // Trigger automatic download
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'processed_markdown.zip';
+      a.download = 'merged_files.zip';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -90,7 +90,7 @@ function App() {
 
         {downloadUrl && (
           <p className="download-link">
-            Or download manually: <a href={downloadUrl} download="processed_markdown.zip">Download ZIP</a>
+            Or download manually: <a className='link' href={downloadUrl} download="merged_files.zip">Download ZIP file</a>
           </p>
         )}
 

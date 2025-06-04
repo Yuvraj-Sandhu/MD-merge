@@ -124,6 +124,10 @@ body {
   margin: 0;
 }
 
+.link {
+  color: #00abf0;
+}
+
 .upload-button {
   background: #00abf0;
   color: #081b29;
