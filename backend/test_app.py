@@ -332,3 +332,121 @@ def test_invalid_zip(client):
     response = client.post("/upload/test-session", data=data, content_type="multipart/form-data")
     assert response.status_code == 400
     assert b"Invalid ZIP file" in response.data
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+
+def test_nested_directories_in_zip(client):
+    """
+    Test handling of nested directory structures within ZIP files.
+    
+    Some ZIP files might contain complex directory structures with
+    Markdown files scattered across multiple folders and subfolders. This
+    test verifies that the application can correctly process files regardless
+    of their directory location within the ZIP archive.
+    
+    Test Steps:
+    1. Create ZIP with files in nested directories (folder1/, folder2/, folder3/subfolder/)
+    2. POST to endpoint
+    3. Verify all Markdown files are processed regardless of directory location
+    4. Check that original filenames are preserved in output
+    
+    Expected Behavior:
+    - HTTP 200 status code
+    - All Markdown files processed regardless of directory depth
+    - Filenames preserved (without directory paths in output)
+    - Directory structure flattened in output ZIP
+    """
+    files = {
+        "folder1/file1.md": "# Dummy title 1\nContent 1",
+        "folder2/file2.md": "### Dummy title 2\nContent 2",
+        "folder3/subfolder/file3.md": "## Dummytitle 3\nContent 3"
+    }
+    zip_data = create_zip_file(files)
+
+    data = {
+        "file": (zip_data, "nested.zip")
+    }
+    response = client.post("/upload/test-session", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+        names = zf.namelist()
+        assert any("file1.md" in name for name in names)
+        assert any("file2.md" in name for name in names)
+        assert any("file3.md" in name for name in names)
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+
+def test_md_files_with_empty_content(client):
+    """
+    Test processing of Markdown files with no content.
+    
+    Empty files are a common edge case that can cause issues in content
+    processing pipelines. This test ensures the application handles empty
+    Markdown files gracefully without errors, while still processing
+    non-empty files normally.
+    
+    Test Steps:
+    1. Create ZIP with one empty .md file and one with content
+    2. POST to endpoint
+    3. Verify both files are processed correctly
+    4. Verify empty file remains empty and content file is preserved
+    
+    Expected Behavior:
+    - HTTP 200 status code
+    - Empty files processed without errors
+    - Empty files remain empty in output
+    - Non-empty files processed normally
+    - No content corruption or loss
+    """
+    files = {
+        "empty.md": "",
+        "not_empty.md": "# Dummy title\nContent"
+    }
+    zip_data = create_zip_file(files)
+
+    data = {
+        "file": (zip_data, "empty_test.zip")
+    }
+    response = client.post("/upload/test-session", data=data, content_type="multipart/form-data")
+    assert response.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(response.data)) as zf:
+        contents = {name: zf.read(name).decode() for name in zf.namelist()}
+        assert "empty.md" in contents
+        assert contents["empty.md"] == ""
+        assert "not_empty.md" in contents
+        assert "Dummy title" in contents["not_empty.md"]
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+
+def test_upload_non_zip_file(client):
+    """
+    Test file type validation for non-ZIP file uploads.
+    
+    The endpoint should only accept ZIP files and reject other file types
+    with appropriate error messages. This test verifies that the application
+    properly validates file types based on file extension and/or content,
+    preventing processing of inappropriate file formats.
+    
+    Test Steps:
+    1. Create non-ZIP file (plain text with .txt extension)
+    2. Attempt to POST to endpoint
+    3. Verify rejection with appropriate error message
+    
+    Expected Behavior:
+    - HTTP 400 Bad Request status code
+    - Clear error message indicating only ZIP files are allowed
+    - No processing of non-ZIP content
+    - Proper client error response
+    """
+    fake_file = io.BytesIO(b"This is not a zip")
+    fake_file.filename = "not_a_zip.txt"
+
+    data = {
+        "file": (fake_file, "not_a_zip.txt")
+    }
+    response = client.post("/upload/test-session", data=data, content_type="multipart/form-data")
+    assert response.status_code == 400
+    assert b"Only ZIP files are allowed" in response.data
