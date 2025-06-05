@@ -10,7 +10,7 @@ import json
 app = Flask(__name__)
 CORS(app)
 
-MAX_FILES_PER_MERGE = 50
+MAX_FILES_PER_MERGE = 49
 MAX_WORDS = 50000
 
 progress_queues = {} 
@@ -51,9 +51,9 @@ def upload_zip(file, session_id):
                 for path in md_files:
                     arcname = os.path.basename(path)
                     out_zip.write(path, arcname=arcname)
-                mem_zip.seek(0)
-                progress_data["done"] = True
-                return send_file(mem_zip, as_attachment=True, download_name=file.filename)
+            mem_zip.seek(0)
+            progress_data["done"] = True
+            return send_file(mem_zip, as_attachment=True, download_name=file.filename)
             
         merged_files = []
         for i in range(0,md_count,MAX_FILES_PER_MERGE):
@@ -61,10 +61,15 @@ def upload_zip(file, session_id):
             merged_content = ""
             for idx,file_path in enumerate(batch):
                 with open(file_path, "r", encoding="utf-8") as f:
-                    
                     progress_data["current_index"] = idx + i + 1
                     progress_queue.put(progress_data.copy())
-                    merged_content += f.read() + "\n\n"
+                    # merged_content += f.read() + "\n\n"
+                    content = f.read()
+                    if content.startswith("---"):
+                        parts = content.split("---",2)
+                        if len(parts) == 3:
+                            content = parts[2].lstrip()
+                    merged_content += content + "\n\n"
             
             word_count = count_words(merged_content)
             filename = f"merged_part{i//MAX_FILES_PER_MERGE + 1}.md"
