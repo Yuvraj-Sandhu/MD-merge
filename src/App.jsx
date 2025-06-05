@@ -25,7 +25,7 @@ function App() {
 
     const sessionId = crypto.randomUUID();
     setUploading(true);
-    setMessage('Starting upload...');
+    setMessage('');
     setProgress(0);
     setProgressMessage('');
     setDownloadUrl('');
