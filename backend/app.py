@@ -356,6 +356,6 @@ if __name__ == "__main__":
     """
     Start the Flask development server.
     
-    Runs the application in debug mode for development purposes.
+    Runs the application.
     """
-    app.run(debug=True)
+    app.run()
