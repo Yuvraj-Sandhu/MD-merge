@@ -10,9 +10,13 @@ A sophisticated web application that intelligently processes ZIP files containin
 
 ## Live Demo
 
-**Frontend**: [https://md-merge.vercel.app/](https://md-merge.vercel.app/)
+**Frontend Only**: [https://md-merge.vercel.app/](https://md-merge.vercel.app/)
 
 > **Note**: The live demo currently shows the frontend interface. For full functionality including file processing, you'll need to run the backend locally (see [Local Development](#-local-development) section).
+
+**Frontend + Render Backend**: [https://md-merge-git-render-yuvraj-singh-sandhus-projects.vercel.app/](https://md-merge-git-render-yuvraj-singh-sandhus-projects.vercel.app/)
+
+> **Note**: This deployment connects to a backend hosted on Render. File upload and ZIP processing work correctly. However, the progress bar does not update in real-time due to Render's limitations with Server-Sent Events (SSE). The processed ZIP file is still downloaded successfully after completion.
 
 ## Features
 
