@@ -116,7 +116,7 @@ function App() {
     // ========================================================================
     
     // Establish Server-Sent Events connection for real-time progress updates
-    const eventSource = new EventSource(`https://md-merge.onrender.com/progress/${sessionId}`);
+    const eventSource = new EventSource(`http://localhost:5000/progress/${sessionId}`);
 
     /**
      * Handle incoming progress updates from the server.
@@ -157,7 +157,7 @@ function App() {
     
     try {
       // Send file to backend for processing
-      const response = await fetch(`https://md-merge.onrender.com/upload/${sessionId}`, {
+      const response = await fetch(`http://localhost:5000/upload/${sessionId}`, {
         method: 'POST',
         body: formData,
       });
